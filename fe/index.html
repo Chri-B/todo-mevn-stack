@@ -1,0 +1,85 @@
+<div id="app">
+  <h2>{{ title }}</h2>
+  <div>
+    <form @submit.prevent="addNote()">
+      <label for="description">Add</label>
+      <input type="text" name="description" v-model="description" required />
+      <button type="submit">Add</button>
+    </form>
+  </div>
+  <div>
+    <div v-for="note in notes" :key="note._id">
+      {{ note.description }}
+      <button @click="removeNote(note.id)">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"
+  integrity="sha512-PJa3oQSLWRB7wHZ7GQ/g+qyv6r4mbuhmiDb8BjSFZ8NZ2a42oTtAq5n0ucWAwcQDlikAtkub+tPVCw4np27WCg=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+
+<script type="module">
+  import { createApp, ref } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+  const API_URL = "http://localhost:5039/";
+  createApp({
+    data() {
+      return {
+        title: "Todo App!",
+        notes: [],
+        description: "",
+      };
+    },
+    methods: {
+      async refreshData() {
+        try {
+          const response = await axios.get(API_URL + "api/todoapp/GetNotes");
+          if (response.status === 200) {
+            // response - object, eg { status: 200, message: 'OK' }
+            console.log("🚀🚀🚀🚀🚀 ~ file: index.html:33 ~ refreshData ~ response:", response);
+            this.notes = response.data;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      async removeNote(id) {
+        try {
+          const response = await axios.delete(API_URL + "api/todoapp/DeleteNote?id=" + id);
+          if (response.status === 200) {
+            this.ini_page();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      async addNote() {
+        console.log(this.description);
+        try {
+          const response = await axios.post(API_URL + "api/todoapp/AddNote", {
+            newNotes: this.description,
+          });
+          console.log(response);
+          if (response.data && response.data.status === 200) {
+            this.ini_page();
+          } else {
+            console.log("throwing err");
+            throw new Error(response.data && response.data.message ? response.data.message : "An error has occurred");
+          }
+        } catch (err) {
+          alert(err);
+        }
+      },
+      ini_page() {
+        this.description = "";
+        this.refreshData();
+      },
+    },
+    mounted() {
+      this.ini_page();
+    },
+  }).mount("#app");
+</script>
